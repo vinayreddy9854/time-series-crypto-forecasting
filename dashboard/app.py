@@ -9,7 +9,6 @@ from dash.dependencies import Input, Output
 import joblib
 import requests
 
-# Function to fetch historical price data from CoinGecko API
 def fetch_crypto_data(crypto_id='bitcoin', days=365):
     url = f'https://api.coingecko.com/api/v3/coins/{crypto_id}/market_chart'
     params = {'vs_currency': 'usd', 'days': str(days)}
@@ -25,7 +24,6 @@ def fetch_crypto_data(crypto_id='bitcoin', days=365):
         'price': price_values
     })
 
-    # Feature engineering
     df['rolling_mean_3'] = df['price'].rolling(window=3).mean()
     df['rolling_std_3'] = df['price'].rolling(window=3).std()
     df['rolling_mean_7'] = df['price'].rolling(window=7).mean()
@@ -35,22 +33,13 @@ def fetch_crypto_data(crypto_id='bitcoin', days=365):
     df['lag_1'] = df['price'].shift(1)
 
     return df.dropna().reset_index(drop=True)
-
-# Initialize the Dash app
+    
 app = dash.Dash(__name__)
-
-# Load model and scaler
 model = load_model("models/lstm_model.keras")
 y_scaler = joblib.load('models/y_scaler.save')
-
-# Load and process data
 df = fetch_crypto_data('bitcoin', 365)
-
-# Features for prediction
 features = ['price', 'lag_1', 'rolling_mean_3', 'rolling_std_3',
             'rolling_mean_7', 'rolling_std_7']
-
-# Get last 30+ predictions for comparison
 lookback = 60
 historical_predictions = []
 timestamps = []
@@ -68,7 +57,6 @@ if len(df) > lookback:
 else:
     predicted_price = None
 
-# Single latest prediction + risk logic
 risk_level = "Insufficient Data"
 investment_advice = "Not Available"
 
@@ -80,7 +68,6 @@ if len(df) >= 25:
     predicted_normalized = model.predict(input_sequence)
     predicted_price = y_scaler.inverse_transform(predicted_normalized)[0][0]
 
-    # Risk logic
     volatility = df['rolling_std_7'].iloc[-1]
     price_trend = df['price'].iloc[-1] - df['price'].iloc[-2]
     vol_mean = df['rolling_std_7'].mean()
@@ -95,7 +82,6 @@ if len(df) >= 25:
         risk_level = "Low Risk"
         investment_advice = "Buy"
 
-# Layout
 app.layout = html.Div([
     html.H1("Cryptocurrency Price Prediction Dashboard"),
 
@@ -123,8 +109,6 @@ app.layout = html.Div([
         html.H4(f"Investment Strategy: {investment_advice}")
     ], className="row"),
 ])
-
-# Callbacks
 
 @app.callback(
     Output('candlestick-chart', 'figure'),
@@ -189,6 +173,5 @@ def update_historical_vs_predicted(_):
     layout = go.Layout(title="Actual vs Predicted Prices", xaxis=dict(title="Date"), yaxis=dict(title="Price"))
     return {'data': [trace_actual, trace_predicted], 'layout': layout}
 
-# Run the app
 if __name__ == '__main__':
     app.run_server(debug=True)
