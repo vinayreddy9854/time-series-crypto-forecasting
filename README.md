@@ -8,7 +8,7 @@ A data-driven forecasting system for cryptocurrency trends using statistical and
 - Market Sentiment Analysis using NLP on Twitter/News Data
 - Interactive Dashboard for trends, risks, and insights
 - Dockerized and deployable using Kubernetes
-- ☁Cloud-ready (AWS/GCP with CI/CD via GitHub Actions)
+- Cloud-ready (AWS/GCP with CI/CD via GitHub Actions)
 
 ## Tech Stack
 
